@@ -43,3 +43,23 @@ export async function getWikiImage (file) {
 
   return imageinfo ? imageinfo[0]['url'] : null
 }
+
+export async function getWikiSemantic (query) {
+  let results = []
+  let offset = 0
+
+  do {
+    const params = {
+      action: 'ask',
+      query: `${query}|limit=500|offset=${offset}`,
+      format: 'json'
+    }
+    const url = 'http://wiki.guildwars2.com/api.php?' + querystring.stringify(params)
+
+    const result = await fetch.single(url)
+    results = [].concat(results, Object.values(result.query.results).map(x => x.printouts))
+    offset = result['query-continue-offset']
+  } while (offset)
+
+  return results
+}

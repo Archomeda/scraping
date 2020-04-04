@@ -1,22 +1,19 @@
-import { getWikiHtml } from './helpers.js'
-import execAll from 'execall'
+import { getWikiSemantic } from './helpers.js'
 
-// Get the current claim ticket offers
 export default async function claimTicketOffers () {
-  let page = await getWikiHtml('Black Lion Weapons Specialist (The Vaults)')
+  const query =
+    '[[Has item cost.Has item currency::Black Lion Claim Ticket]]|' +
+    '[[Has vendor.Is historical::false]]|' +
+    '?Has vendor section=section|' +
+    '?Has item cost.Has item value=cost|' +
+    '?Has item quantity=quantity|' +
+    '?Sells item.Has canonical name=name|' +
+    '?Sells item.Has game id=id'
 
-  // Find all items sold for black lion tickets with their costs
-  let regex = /<tr[\s\S]*?<a href="[^"]*" title="([^"]*)">[\s\S]*?class="inline-icon">(\d*)(&nbsp;|&#160;)*<a [^>]* title="Black Lion Claim Ticket"[\s\S]*?<\/tr>/gi
-  let matches = execAll(regex, page).map(x => x.sub)
-
-  let map = {}
-  matches.map(x => {
-    const name = x[0].replace(/&#39;/g, `'`)
-    map[name] = parseInt(x[1], 10)
+  const results = await getWikiSemantic(query)
+  const map = {}
+  results.map(x => {
+    map[x.name[0]] = x.cost[0]
   })
-
-  // Remove failures
-  delete map['Black Lion Claim Ticket']
-
   return map
 }
